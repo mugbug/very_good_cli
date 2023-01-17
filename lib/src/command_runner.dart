@@ -1,5 +1,6 @@
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
+import 'package:cli_completion/cli_completion.dart';
 import 'package:mason/mason.dart' hide packageVersion;
 import 'package:pub_updater/pub_updater.dart';
 import 'package:usage/usage_io.dart';
@@ -18,7 +19,7 @@ const packageName = 'very_good_cli';
 /// {@template very_good_command_runner}
 /// A [CommandRunner] for the Very Good CLI.
 /// {@endtemplate}
-class VeryGoodCommandRunner extends CommandRunner<int> {
+class VeryGoodCommandRunner extends CompletionCommandRunner<int> {
   /// {@macro very_good_command_runner}
   VeryGoodCommandRunner({
     Analytics? analytics,
@@ -64,6 +65,61 @@ class VeryGoodCommandRunner extends CommandRunner<int> {
   @override
   void printUsage() => _logger.info(usage);
 
+  /// Parse commands with legacy support for the create command.
+  ///
+  /// Redirects usages of [CreateCommand] to the [LegacyCreateCommand] if
+  /// it detects the legacy syntax.
+  @override
+  ArgResults parse(Iterable<String> args) {
+    ArgResults result;
+
+    // Try to parse the args
+    try {
+      result = argParser.parse(args);
+    } on ArgParserException catch (error) {
+      if (error.commands.isEmpty) usageException(error.message);
+
+      // if there is an error and the last parsed command is create,
+      // we possibly have a legacy syntax usage, retry parsing with the
+      // legacy command.
+      if (error.commands.last == 'create') {
+        return parse(_putLegacyAfterCreate(args));
+      }
+
+      // Otherwise just go about showing the usage exception for the last
+      // parsed command.
+      var command = commands[error.commands.first]!;
+      for (final commandName in error.commands.skip(1)) {
+        command = command.subcommands[commandName]!;
+      }
+
+      command.usageException(error.message);
+    }
+
+    // if no arg is passed, or the last given command is create,
+    // show normal results.
+    if (args.isEmpty) {
+      return result;
+    }
+
+    final topLevelCommand = result.command;
+
+    // Retry with legacy command if:
+    // - top level command is not null
+    // - and the top level command is create
+    // - and no create subcommand was parsed
+    // - and user is not calling create --help
+    if (topLevelCommand != null &&
+        topLevelCommand.name == 'create' &&
+        topLevelCommand.command == null &&
+        !topLevelCommand.wasParsed('help') &&
+        topLevelCommand.rest.isNotEmpty) {
+      return parse(_putLegacyAfterCreate(args));
+    }
+
+    return result;
+  }
+
   @override
   Future<int> run(Iterable<String> args) async {
     try {
@@ -85,6 +141,7 @@ class VeryGoodCommandRunner extends CommandRunner<int> {
             normalizedResponse == 'y' || normalizedResponse == 'yes';
       }
       final _argResults = parse(args);
+
       if (_argResults['verbose'] == true) {
         _logger.level = Level.verbose;
       }
@@ -107,6 +164,11 @@ class VeryGoodCommandRunner extends CommandRunner<int> {
 
   @override
   Future<int?> runCommand(ArgResults topLevelResults) async {
+    if (topLevelResults.command?.name == 'completion') {
+      await super.runCommand(topLevelResults);
+      return ExitCode.success.code;
+    }
+
     _logger
       ..detail('Argument information:')
       ..detail('  Top level options:');
@@ -124,6 +186,11 @@ class VeryGoodCommandRunner extends CommandRunner<int> {
         if (commandResult.wasParsed(option)) {
           _logger.detail('    - $option: ${commandResult[option]}');
         }
+      }
+
+      if (commandResult.command != null) {
+        final subCommandResult = commandResult.command!;
+        _logger.detail('    Command sub command: ${subCommandResult.name}');
       }
     }
 
@@ -165,4 +232,12 @@ Run ${lightCyan.wrap('very_good update')} to update''',
       }
     } catch (_) {}
   }
+}
+
+Iterable<String> _putLegacyAfterCreate(Iterable<String> args) {
+  final argsList = args.toList();
+  final index = argsList.indexOf('create');
+
+  argsList.insert(index + 1, 'legacy');
+  return argsList;
 }

@@ -1,4 +1,30 @@
-# [0.8.5](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.8.4...v0.8.5) (2022-11-17)
+# [0.9.1](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.9.0...v0.9.1) (2022-12-09)
+
+### Bug Fixes
+
+- **test:** groups may not be async ([#599](https://github.com/VeryGoodOpenSource/very_good_cli/issues/599)) ([cec868c](https://github.com/VeryGoodOpenSource/very_good_cli/commit/cec868cf2b5ee8d4a002d0125c553a299eb4c532))
+
+### Features
+
+- add cli completion ([#600](https://github.com/VeryGoodOpenSource/very_good_cli/issues/600)) ([c33dadd](https://github.com/VeryGoodOpenSource/very_good_cli/commit/c33daddc1d433e162a7890ffa4f0135eda369bad))
+
+# [0.9.0](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.8.6...v0.9.0) (2022-12-07)
+
+### Bug Fixes
+
+- **create:** windows path resolution ([#597](https://github.com/VeryGoodOpenSource/very_good_cli/issues/597)) ([42a3a0f](https://github.com/VeryGoodOpenSource/very_good_cli/commit/42a3a0fd8368369478dcf7fbcf6149c87639684b))
+
+### Features
+
+- add publishable flag ([#592](https://github.com/VeryGoodOpenSource/very_good_cli/issues/592)) ([53cf064](https://github.com/VeryGoodOpenSource/very_good_cli/commit/53cf06456220954639adf3f733f4d7d87bfa832c))
+
+# [0.8.6](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.8.5...v0.8.6) (2022-12-02)
+
+### Features
+
+- remove copyright headers and licenses from generated code ([#593](https://github.com/VeryGoodOpenSource/very_good_cli/issues/593)) ([0fcfc26](https://github.com/VeryGoodOpenSource/very_good_cli/commit/0fcfc266f0803955bb402dce5ba0e472dac0c29a))
+
+## [0.8.5](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.8.4...v0.8.5) (2022-11-17)
 
 ### Features
 

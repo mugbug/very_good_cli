@@ -71,7 +71,6 @@ void main() {
     late TestCommand testCommand;
 
     setUp(() {
-      Directory.current = cwd;
       logger = MockLogger();
       isFlutterInstalled = true;
       argResults = MockArgResults();
@@ -105,6 +104,10 @@ void main() {
       when<dynamic>(() => argResults['update-goldens']).thenReturn(false);
       when<dynamic>(() => argResults['optimization']).thenReturn(true);
       when(() => argResults.rest).thenReturn([]);
+    });
+
+    tearDown(() {
+      Directory.current = cwd;
     });
 
     test(
