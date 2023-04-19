@@ -19,7 +19,7 @@ class MockPubUpdater extends Mock implements PubUpdater {}
 
 class MockProgress extends Mock implements Progress {}
 
-class FakeProcessResult extends Fake implements ProcessResult {}
+class MockProcessResult extends Mock implements ProcessResult {}
 
 const expectedUsage = [
   '🦄 A Very Good Command-Line Interface\n'
@@ -37,7 +37,7 @@ const expectedUsage = [
       '''    --[no-]verbose    Noisy logging, including all shell commands executed.\n'''
       '\n'
       'Available commands:\n'
-      '  create     very_good create <project name>\n'
+      '  create     very_good create <subcommand> <project-name> [arguments]\n'
       '''             Creates a new very good project in the specified directory.\n'''
       '  packages   Command for managing packages.\n'
       '  test       Run tests in a Dart or Flutter project.\n'
@@ -62,10 +62,12 @@ void main() {
     late PubUpdater pubUpdater;
     late Logger logger;
     late VeryGoodCommandRunner commandRunner;
+    late ProcessResult processResult;
 
     setUp(() {
       analytics = MockAnalytics();
       pubUpdater = MockPubUpdater();
+      processResult = MockProcessResult();
 
       when(() => analytics.firstRun).thenReturn(false);
       when(() => analytics.enabled).thenReturn(false);
@@ -106,15 +108,18 @@ void main() {
             () => pubUpdater.getLatestVersion(any()),
           ).thenAnswer((_) async => latestVersion);
           when(
-            () => pubUpdater.update(packageName: packageName),
-          ).thenAnswer((_) => Future.value(FakeProcessResult()));
+            () => pubUpdater.update(
+              packageName: packageName,
+              versionConstraint: latestVersion,
+            ),
+          ).thenAnswer((_) => Future.value(processResult));
           when(
             () => pubUpdater.isUpToDate(
               packageName: any(named: 'packageName'),
               currentVersion: any(named: 'currentVersion'),
             ),
           ).thenAnswer((_) => Future.value(true));
-
+          when(() => processResult.exitCode).thenReturn(0);
           final progress = MockProgress();
           final progressLogs = <String>[];
           when(() => progress.complete(any())).thenAnswer((_) {
@@ -188,6 +193,18 @@ void main() {
       test('handles no command', () async {
         final result = await commandRunner.run([]);
         verify(() => logger.info(expectedUsage.join())).called(1);
+        expect(result, equals(ExitCode.success.code));
+      });
+
+      test('handles completion command', () async {
+        final result = await commandRunner.run(['completion']);
+        verifyNever(() => logger.info(any()));
+        verifyNever(() => logger.err(any()));
+        verifyNever(() => logger.warn(any()));
+        verifyNever(() => logger.write(any()));
+        verifyNever(() => logger.success(any()));
+        verifyNever(() => logger.detail(any()));
+
         expect(result, equals(ExitCode.success.code));
       });
 
@@ -265,17 +282,15 @@ void main() {
           final result = await commandRunner.run([
             '--verbose',
             'create',
-            '-t',
-            'dart_pkg',
+            '--help',
           ]);
-          expect(result, equals(ExitCode.usage.code));
+          expect(result, equals(ExitCode.success.code));
 
           verify(() => logger.detail('Argument information:')).called(1);
           verify(() => logger.detail('  Top level options:')).called(1);
           verify(() => logger.detail('  - verbose: true')).called(1);
           verify(() => logger.detail('  Command: create')).called(1);
-          verify(() => logger.detail('    Command options:')).called(1);
-          verify(() => logger.detail('    - template: dart_pkg')).called(1);
+          verify(() => logger.detail('    - help: true')).called(1);
         });
       });
     });

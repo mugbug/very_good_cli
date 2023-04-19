@@ -28,6 +28,7 @@ const expectedTestUsage = [
       '''    --min-coverage                    Whether to enforce a minimum coverage percentage.\n'''
       '''    --test-randomize-ordering-seed    The seed to randomize the execution order of test cases within test files.\n'''
       '''    --update-goldens                  Whether "matchesGoldenFile()" calls within your test methods should update the golden files.\n'''
+      '''    --force-ansi                      Whether to force ansi output. If not specified, it will maintain the default behavior based on stdout and stderr.\n'''
       '''    --dart-define=<foo=bar>           Additional key-value pairs that will be available as constants from the String.fromEnvironment, bool.fromEnvironment, int.fromEnvironment, and double.fromEnvironment constructors. Multiple defines can be passed by repeating "--dart-define" multiple times.\n'''
       '\n'
       'Run "very_good help" to see global options.'
@@ -49,6 +50,7 @@ abstract class FlutterTestCommand {
     Logger? logger,
     void Function(String)? stdout,
     void Function(String)? stderr,
+    bool? forceAnsi,
   });
 }
 
@@ -71,7 +73,6 @@ void main() {
     late TestCommand testCommand;
 
     setUp(() {
-      Directory.current = cwd;
       logger = MockLogger();
       isFlutterInstalled = true;
       argResults = MockArgResults();
@@ -97,6 +98,7 @@ void main() {
           logger: any(named: 'logger'),
           stdout: any(named: 'stdout'),
           stderr: any(named: 'stderr'),
+          forceAnsi: any(named: 'forceAnsi'),
         ),
       ).thenAnswer((_) async => [0]);
       when<dynamic>(() => argResults['concurrency']).thenReturn(concurrency);
@@ -105,6 +107,10 @@ void main() {
       when<dynamic>(() => argResults['update-goldens']).thenReturn(false);
       when<dynamic>(() => argResults['optimization']).thenReturn(true);
       when(() => argResults.rest).thenReturn([]);
+    });
+
+    tearDown(() {
+      Directory.current = cwd;
     });
 
     test(
@@ -126,8 +132,10 @@ void main() {
       'throws pubspec not found exception '
       'when no pubspec.yaml exists',
       withRunner((commandRunner, logger, pubUpdater, printLogs) async {
-        final directory = Directory.systemTemp.createTempSync();
-        Directory.current = directory.path;
+        final tempDirectory = Directory.systemTemp.createTempSync();
+        addTearDown(() => tempDirectory.deleteSync(recursive: true));
+
+        Directory.current = tempDirectory.path;
         final result = await commandRunner.run(['test']);
         expect(result, equals(ExitCode.noInput.code));
         verify(() {
@@ -139,8 +147,10 @@ void main() {
     test(
       'completes normally when no pubspec.yaml exists (recursive)',
       withRunner((commandRunner, logger, pubUpdater, printLogs) async {
-        final directory = Directory.systemTemp.createTempSync();
-        Directory.current = directory.path;
+        final tempDirectory = Directory.systemTemp.createTempSync();
+        addTearDown(() => tempDirectory.deleteSync(recursive: true));
+
+        Directory.current = tempDirectory.path;
 
         Directory(path.join(Directory.current.path, 'project')).createSync();
         File(
@@ -476,6 +486,24 @@ void main() {
           logger: logger,
           stdout: logger.write,
           stderr: logger.err,
+        ),
+      ).called(1);
+    });
+
+    test('completes normally --force-ansi', () async {
+      when<dynamic>(() => argResults['force-ansi']).thenReturn(true);
+      final result = await testCommand.run();
+      expect(result, equals(ExitCode.success.code));
+      verify(
+        () => flutterTest(
+          optimizePerformance: true,
+          arguments: [
+            ...defaultArguments,
+          ],
+          logger: logger,
+          stdout: logger.write,
+          stderr: logger.err,
+          forceAnsi: true,
         ),
       ).called(1);
     });

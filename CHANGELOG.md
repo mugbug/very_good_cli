@@ -1,4 +1,110 @@
-# [0.8.5](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.8.4...v0.8.5) (2022-11-17)
+# [0.13.1](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.13.0...v0.13.1) (2023-04-12)
+
+### Bug Fixes
+
+- support ignoring empty globs ([#703](https://github.com/VeryGoodOpenSource/very_good_cli/issues/703)) ([6a1a9df](https://github.com/VeryGoodOpenSource/very_good_cli/commit/6a1a9df9394b53879084e36bf40566ae9ac2abc8))
+
+# [0.13.0](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.12.3+1...v0.13.0) (2023-03-29)
+
+### Features
+
+- add wear os template to the create command ([#694](https://github.com/VeryGoodOpenSource/very_good_cli/issues/694)) ([40f71c1](https://github.com/VeryGoodOpenSource/very_good_cli/commit/40f71c13b79b28129b380e83b31a92bf5dfd8327))
+
+## [0.12.3+1](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.12.3...v0.12.3+1) (2023-03-27)
+
+## [0.12.3](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.12.2...v0.12.3) (2023-03-23)
+
+### Features
+
+- add support for excluding packages ([#640](https://github.com/VeryGoodOpenSource/very_good_cli/issues/640)) ([3701efa](https://github.com/VeryGoodOpenSource/very_good_cli/commit/3701efa9516b7b2b0e02de90fb85dcde3b089766))
+- bump template bundles ([#690](https://github.com/VeryGoodOpenSource/very_good_cli/issues/690)) ([5ed7c15](https://github.com/VeryGoodOpenSource/very_good_cli/commit/5ed7c159ce77208822fccb2068a3d7521f1a95dc))
+- **test:** enhance logs and final test report in case of failing tests ([#563](https://github.com/VeryGoodOpenSource/very_good_cli/issues/563)) ([3b5668e](https://github.com/VeryGoodOpenSource/very_good_cli/commit/3b5668e3b48fa1bb7e49bba9f78329360c6b4c1a))
+
+## [0.12.2](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.12.1...v0.12.2) (2023-03-02)
+
+### Bug Fixes
+
+- **test_optimizer:** mismatch of versions on hook ([#675](https://github.com/VeryGoodOpenSource/very_good_cli/issues/675)) ([d354745](https://github.com/VeryGoodOpenSource/very_good_cli/commit/d354745510080249a60975e7475830760583d226))
+
+## [0.12.1](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.12.0...v0.12.1) (2023-03-01)
+
+### Bug Fixes
+
+- **test_optimizer:** set dart constraint to v2.18.0 ([#673](https://github.com/VeryGoodOpenSource/very_good_cli/issues/673)) ([491a78c](https://github.com/VeryGoodOpenSource/very_good_cli/commit/491a78c69355de5bff3b693a223f305559b89ee9))
+
+# [0.12.0](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.11.0+1...v0.12.0) (2023-02-28)
+
+### Bug Fixes
+
+- documentation inconsistency with tool directory ([#662](https://github.com/VeryGoodOpenSource/very_good_cli/issues/662)) ([7ace466](https://github.com/VeryGoodOpenSource/very_good_cli/commit/7ace466fd68f9f208e54306c74cdc84e9b0e4f6d))
+- recursive min coverage ([#647](https://github.com/VeryGoodOpenSource/very_good_cli/issues/647)) ([5f46928](https://github.com/VeryGoodOpenSource/very_good_cli/commit/5f46928949df76373e78573a5635b4297e5e0a46))
+- test optimizer to import files as valid dart names ([#658](https://github.com/VeryGoodOpenSource/very_good_cli/issues/658)) ([61345cc](https://github.com/VeryGoodOpenSource/very_good_cli/commit/61345cc3d4c90431563a1808cbc27cb816c6f551))
+
+### Features
+
+- add test optimizer brick ([#639](https://github.com/VeryGoodOpenSource/very_good_cli/issues/639)) ([3f8434e](https://github.com/VeryGoodOpenSource/very_good_cli/commit/3f8434edc886eb74cacd763dd166f63cf907d205))
+- allow forcing ansi output via ansi-output option ([#534](https://github.com/VeryGoodOpenSource/very_good_cli/issues/534)) ([ff31511](https://github.com/VeryGoodOpenSource/very_good_cli/commit/ff31511c12df99085d28545436ea64d05de714f1))
+- bump template bundles ([#650](https://github.com/VeryGoodOpenSource/very_good_cli/issues/650)) ([c6c2ba5](https://github.com/VeryGoodOpenSource/very_good_cli/commit/c6c2ba506c74f07ce586863a4fcf500bc5f0070a))
+- bump template bundles ([#661](https://github.com/VeryGoodOpenSource/very_good_cli/issues/661)) ([af4eaf2](https://github.com/VeryGoodOpenSource/very_good_cli/commit/af4eaf2e19899861acf4c624a882f3922b915c7d))
+- bump template bundles ([#663](https://github.com/VeryGoodOpenSource/very_good_cli/issues/663)) ([e10b59e](https://github.com/VeryGoodOpenSource/very_good_cli/commit/e10b59e585c7b6a2aa0c8d659be4c827d8deed20))
+
+# [v0.11.0+1](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.11.0...v0.11.0+1) (2023-02-07)
+
+# [0.11.0](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.10.0...v0.11.0) (2023-02-07)
+
+### Bug Fixes
+
+- bump_templates.yaml ([#642](https://github.com/VeryGoodOpenSource/very_good_cli/issues/642)) ([e1c60e3](https://github.com/VeryGoodOpenSource/very_good_cli/commit/e1c60e3df239a7683b18c5a995d3cb32df5530d0))
+- **create:** docs site template org validation ([#624](https://github.com/VeryGoodOpenSource/very_good_cli/issues/624)) ([c44f194](https://github.com/VeryGoodOpenSource/very_good_cli/commit/c44f1947c6e268355068e2b3c491b884a094a776))
+- fix test report in case of multiline test name ([#535](https://github.com/VeryGoodOpenSource/very_good_cli/issues/535)) ([5f2aa49](https://github.com/VeryGoodOpenSource/very_good_cli/commit/5f2aa49f7725173a86f57e7fc19fd3250d5b8e70))
+- update silently fails when the sdk does not support most recent version ([#627](https://github.com/VeryGoodOpenSource/very_good_cli/issues/627)) ([3540c42](https://github.com/VeryGoodOpenSource/very_good_cli/commit/3540c42ce38f79c69698bbff64dc8e147d84301f))
+
+### Features
+
+- bump template bundles ([#643](https://github.com/VeryGoodOpenSource/very_good_cli/issues/643)) ([c3cd8f3](https://github.com/VeryGoodOpenSource/very_good_cli/commit/c3cd8f32559036e55fcfba6bd644e4b7d711f9c8))
+- change description of create sub commands ([#625](https://github.com/VeryGoodOpenSource/very_good_cli/issues/625)) ([560f44a](https://github.com/VeryGoodOpenSource/very_good_cli/commit/560f44a9930038be385e3e5a8257445c0559f312))
+- update sdk constraints ([#628](https://github.com/VeryGoodOpenSource/very_good_cli/issues/628)) ([19f6ddf](https://github.com/VeryGoodOpenSource/very_good_cli/commit/19f6ddfb7e348446fa36905c7a7c2e3cf0c48c7e))
+- update template bundles ([#637](https://github.com/VeryGoodOpenSource/very_good_cli/issues/637)) ([6450872](https://github.com/VeryGoodOpenSource/very_good_cli/commit/64508722ac79abc01b70eee2498dbbdf546cfc43))
+
+# [0.10.0](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.9.1...v0.10.0) (2023-01-17)
+
+### Features
+
+- create dart cli new usage ([#612](https://github.com/VeryGoodOpenSource/very_good_cli/issues/612)) ([1a94dc6](https://github.com/VeryGoodOpenSource/very_good_cli/commit/1a94dc60c15bf38b48955f0a5c50a5ed514a947b))
+- create dart package new usage ([#611](https://github.com/VeryGoodOpenSource/very_good_cli/issues/611)) ([aa391d6](https://github.com/VeryGoodOpenSource/very_good_cli/commit/aa391d692d816ebe548a7a9f85b72bed23f50b04))
+- create docs site new usage ([#614](https://github.com/VeryGoodOpenSource/very_good_cli/issues/614)) ([35b9bd1](https://github.com/VeryGoodOpenSource/very_good_cli/commit/35b9bd1c8e165fba851036e32e1ace3c0f286b02))
+- create flame game new usage ([#618](https://github.com/VeryGoodOpenSource/very_good_cli/issues/618)) ([9b480f2](https://github.com/VeryGoodOpenSource/very_good_cli/commit/9b480f26e23b1399b201aa28950f2245e02e6924))
+- create flutter package new usage ([#616](https://github.com/VeryGoodOpenSource/very_good_cli/issues/616)) ([ece6849](https://github.com/VeryGoodOpenSource/very_good_cli/commit/ece68492327da478c5016775abd7b1d099c3d180))
+- create flutter plugin new usage ([#617](https://github.com/VeryGoodOpenSource/very_good_cli/issues/617)) ([0a8bef5](https://github.com/VeryGoodOpenSource/very_good_cli/commit/0a8bef5b1291092819654c5ceb454fed7b5447df))
+- recreate flutter create with sub commands ([#607](https://github.com/VeryGoodOpenSource/very_good_cli/issues/607)) ([e01a127](https://github.com/VeryGoodOpenSource/very_good_cli/commit/e01a127758bc539d3c5cd8e98c5cca04f496df34))
+
+## [0.9.1](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.9.0...v0.9.1) (2022-12-09)
+
+### Bug Fixes
+
+- **test:** groups may not be async ([#599](https://github.com/VeryGoodOpenSource/very_good_cli/issues/599)) ([cec868c](https://github.com/VeryGoodOpenSource/very_good_cli/commit/cec868cf2b5ee8d4a002d0125c553a299eb4c532))
+
+### Features
+
+- add cli completion ([#600](https://github.com/VeryGoodOpenSource/very_good_cli/issues/600)) ([c33dadd](https://github.com/VeryGoodOpenSource/very_good_cli/commit/c33daddc1d433e162a7890ffa4f0135eda369bad))
+
+# [0.9.0](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.8.6...v0.9.0) (2022-12-07)
+
+### Bug Fixes
+
+- **create:** windows path resolution ([#597](https://github.com/VeryGoodOpenSource/very_good_cli/issues/597)) ([42a3a0f](https://github.com/VeryGoodOpenSource/very_good_cli/commit/42a3a0fd8368369478dcf7fbcf6149c87639684b))
+
+### Features
+
+- add publishable flag ([#592](https://github.com/VeryGoodOpenSource/very_good_cli/issues/592)) ([53cf064](https://github.com/VeryGoodOpenSource/very_good_cli/commit/53cf06456220954639adf3f733f4d7d87bfa832c))
+
+## [0.8.6](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.8.5...v0.8.6) (2022-12-02)
+
+### Features
+
+- remove copyright headers and licenses from generated code ([#593](https://github.com/VeryGoodOpenSource/very_good_cli/issues/593)) ([0fcfc26](https://github.com/VeryGoodOpenSource/very_good_cli/commit/0fcfc266f0803955bb402dce5ba0e472dac0c29a))
+
+## [0.8.5](https://github.com/VeryGoodOpenSource/very_good_cli/compare/v0.8.4...v0.8.5) (2022-11-17)
 
 ### Features
 

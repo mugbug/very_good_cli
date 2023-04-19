@@ -1,18 +1,19 @@
 import 'dart:async';
-
+import 'package:collection/collection.dart';
 import 'package:glob/glob.dart';
 import 'package:lcov_parser/lcov_parser.dart';
 import 'package:mason/mason.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 import 'package:pubspec_parse/pubspec_parse.dart';
-import 'package:stack_trace/stack_trace.dart';
 import 'package:universal_io/io.dart';
-import 'package:very_good_cli/src/commands/test/templates/test_runner_bundle.dart';
+import 'package:very_good_cli/src/commands/test/templates/test_optimizer_bundle.dart';
 import 'package:very_good_test_runner/very_good_test_runner.dart';
 
 part 'dart_cli.dart';
+
 part 'flutter_cli.dart';
+
 part 'git_cli.dart';
 
 const _asyncRunZoned = runZoned;
@@ -76,9 +77,9 @@ class _Cmd {
   static Future<ProcessResult> run(
     String cmd,
     List<String> args, {
+    required Logger logger,
     bool throwOnError = true,
     String? workingDirectory,
-    required Logger logger,
   }) async {
     logger.detail('Running: $cmd with $args');
     final runProcess = ProcessOverrides.current?.runProcess ?? Process.run;
@@ -103,7 +104,26 @@ class _Cmd {
     required bool Function(FileSystemEntity) where,
     String cwd = '.',
   }) {
-    return Directory(cwd).listSync(recursive: true).where(where).map(run);
+    final directories =
+        Directory(cwd).listSync(recursive: true).where(where).toList()
+          ..sort((a, b) {
+            /// Linux and macOS have different sorting behaviors
+            /// regarding the order that the list of folders/files are returned.
+            /// To ensure consistency across platforms, we apply a
+            /// uniform sorting logic.
+            final aSplit = p.split(a.path);
+            final bSplit = p.split(b.path);
+            final aLevel = aSplit.length;
+            final bLevel = bSplit.length;
+
+            if (aLevel == bLevel) {
+              return aSplit.last.compareTo(bSplit.last);
+            } else {
+              return aLevel.compareTo(bLevel);
+            }
+          });
+
+    return directories.map(run);
   }
 
   static void _throwIfProcessFailed(
@@ -141,8 +161,26 @@ const _ignoredDirectories = {
 };
 
 bool _isPubspec(FileSystemEntity entity) {
-  final segments = p.split(entity.path).toSet();
-  if (segments.intersection(_ignoredDirectories).isNotEmpty) return false;
   if (entity is! File) return false;
   return p.basename(entity.path) == 'pubspec.yaml';
+}
+
+// The extension is intended to be unnamed, but it's not possible due to
+// an issue with Dart SDK 2.18.0.
+//
+// Once the min Dart SDK is bumped, this extension can be unnamed again.
+extension _Set on Set<String> {
+  bool excludes(FileSystemEntity entity) {
+    final segments = p.split(entity.path).toSet();
+    if (segments.intersection(_ignoredDirectories).isNotEmpty) return true;
+    if (segments.intersection(this).isNotEmpty) return true;
+
+    for (final value in this) {
+      if (value.isNotEmpty && Glob(value).matches(entity.path)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 }

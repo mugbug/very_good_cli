@@ -1,5 +1,7 @@
 part of 'cli.dart';
 
+const _testOptimizerFileName = '.test_optimizer.dart';
+
 /// Thrown when `flutter packages get` or `flutter pub get`
 /// is executed without a `pubspec.yaml`.
 class PubspecNotFound implements Exception {}
@@ -77,9 +79,10 @@ class Flutter {
 
   /// Install flutter dependencies (`flutter packages get`).
   static Future<void> packagesGet({
+    required Logger logger,
     String cwd = '.',
     bool recursive = false,
-    required Logger logger,
+    Set<String> ignore = const {},
   }) async {
     await _runCommand(
       cmd: (cwd) async {
@@ -107,14 +110,16 @@ class Flutter {
       },
       cwd: cwd,
       recursive: recursive,
+      ignore: ignore,
     );
   }
 
   /// Install dart dependencies (`flutter pub get`).
   static Future<void> pubGet({
+    required Logger logger,
     String cwd = '.',
     bool recursive = false,
-    required Logger logger,
+    Set<String> ignore = const {},
   }) async {
     await _runCommand(
       cmd: (cwd) => _Cmd.run(
@@ -125,37 +130,40 @@ class Flutter {
       ),
       cwd: cwd,
       recursive: recursive,
+      ignore: ignore,
     );
   }
 
   /// Run tests (`flutter test`).
   /// Returns a list of exit codes for each test process.
   static Future<List<int>> test({
+    required Logger logger,
     String cwd = '.',
     bool recursive = false,
     bool collectCoverage = false,
     bool optimizePerformance = false,
+    Set<String> ignore = const {},
     double? minCoverage,
     String? excludeFromCoverage,
     String? randomSeed,
     String? tags,
     String? excludeTags,
+    bool? forceAnsi,
     List<String>? arguments,
-    required Logger logger,
     void Function(String)? stdout,
     void Function(String)? stderr,
     FlutterTestRunner testRunner = flutterTest,
     GeneratorBuilder buildGenerator = MasonGenerator.fromBundle,
   }) async {
-    final lcovPath = p.join(cwd, 'coverage', 'lcov.info');
-    final lcovFile = File(lcovPath);
-
-    if (collectCoverage && lcovFile.existsSync()) {
-      await lcovFile.delete();
-    }
-
-    final results = await _runCommand<int>(
+    return _runCommand<int>(
       cmd: (cwd) async {
+        final lcovPath = p.join(cwd, 'coverage', 'lcov.info');
+        final lcovFile = File(lcovPath);
+
+        if (collectCoverage && lcovFile.existsSync()) {
+          await lcovFile.delete();
+        }
+
         void noop(String? _) {}
         final target = DirectoryGeneratorTarget(Directory(p.normalize(cwd)));
         final workingDirectory = target.dir.absolute.path;
@@ -180,7 +188,7 @@ class Flutter {
         if (optimizePerformance) {
           final optimizationProgress = logger.progress('Optimizing tests');
           try {
-            final generator = await buildGenerator(testRunnerBundle);
+            final generator = await buildGenerator(testOptimizerBundle);
             var vars = <String, dynamic>{
               'package-root': workingDirectory,
               'exclude-tags': excludeTags ?? '',
@@ -200,45 +208,56 @@ class Flutter {
             optimizationProgress.complete();
           }
         }
-
-        return _flutterTest(
-          cwd: cwd,
-          collectCoverage: collectCoverage,
-          testRunner: testRunner,
-          arguments: [
-            ...?arguments,
-            if (randomSeed != null) ...[
-              '--test-randomize-ordering-seed',
-              randomSeed
+        return _overrideAnsiOutput(
+          forceAnsi,
+          () => _flutterTest(
+            cwd: cwd,
+            collectCoverage: collectCoverage,
+            testRunner: testRunner,
+            arguments: [
+              ...?arguments,
+              if (randomSeed != null) ...[
+                '--test-randomize-ordering-seed',
+                randomSeed
+              ],
+              if (optimizePerformance) p.join('test', _testOptimizerFileName)
             ],
-            if (optimizePerformance) p.join('test', '.test_runner.dart')
-          ],
-          stdout: stdout ?? noop,
-          stderr: stderr ?? noop,
-        ).whenComplete(() {
-          if (optimizePerformance) {
-            File(p.join(cwd, 'test', '.test_runner.dart')).delete().ignore();
-          }
-        });
+            stdout: stdout ?? noop,
+            stderr: stderr ?? noop,
+          ).whenComplete(() async {
+            if (optimizePerformance) {
+              File(p.join(cwd, 'test', _testOptimizerFileName))
+                  .delete()
+                  .ignore();
+            }
+
+            if (collectCoverage) {
+              assert(lcovFile.existsSync(), 'coverage/lcov.info must exist');
+            }
+
+            if (minCoverage != null) {
+              final records = await Parser.parse(lcovPath);
+              final coverageMetrics = _CoverageMetrics.fromLcovRecords(
+                records,
+                excludeFromCoverage,
+              );
+              final coverage = coverageMetrics.percentage;
+
+              if (coverage < minCoverage) throw MinCoverageNotMet(coverage);
+            }
+          }),
+        );
       },
       cwd: cwd,
       recursive: recursive,
+      ignore: ignore,
     );
-
-    if (collectCoverage) {
-      assert(lcovFile.existsSync(), 'coverage/lcov.info must exist');
-    }
-    if (minCoverage != null) {
-      final records = await Parser.parse(lcovPath);
-      final coverageMetrics = _CoverageMetrics.fromLcovRecords(
-        records,
-        excludeFromCoverage,
-      );
-      final coverage = coverageMetrics.percentage;
-      if (coverage < minCoverage) throw MinCoverageNotMet(coverage);
-    }
-    return results;
   }
+
+  static T _overrideAnsiOutput<T>(bool? enableAnsiOutput, T Function() body) =>
+      enableAnsiOutput == null
+          ? body.call()
+          : overrideAnsiOutput(enableAnsiOutput, body);
 }
 
 /// Ensures all git dependencies are reachable for the pubspec
@@ -282,6 +301,7 @@ Future<List<T>> _runCommand<T>({
   required Future<T> Function(String cwd) cmd,
   required String cwd,
   required bool recursive,
+  required Set<String> ignore,
 }) async {
   if (!recursive) {
     final pubspec = File(p.join(cwd, 'pubspec.yaml'));
@@ -292,7 +312,7 @@ Future<List<T>> _runCommand<T>({
 
   final processes = _Cmd.runWhere<T>(
     run: (entity) => cmd(entity.parent.path),
-    where: _isPubspec,
+    where: (entity) => !ignore.excludes(entity) && _isPubspec(entity),
     cwd: cwd,
   );
 
@@ -306,12 +326,12 @@ Future<List<T>> _runCommand<T>({
 }
 
 Future<int> _flutterTest({
+  required void Function(String) stdout,
+  required void Function(String) stderr,
   String cwd = '.',
   bool collectCoverage = false,
   List<String>? arguments,
   FlutterTestRunner testRunner = flutterTest,
-  required void Function(String) stdout,
-  required void Function(String) stderr,
 }) {
   const clearLine = '\u001B[2K\r';
 
@@ -319,14 +339,15 @@ Future<int> _flutterTest({
   final suites = <int, TestSuite>{};
   final groups = <int, TestGroup>{};
   final tests = <int, Test>{};
-  final failedTestErrorMessages = <int, String>{};
+  final failedTestErrorMessages = <String, List<String>>{};
 
   var successCount = 0;
   var skipCount = 0;
 
   String computeStats() {
     final passingTests = successCount.formatSuccess();
-    final failingTests = failedTestErrorMessages.length.formatFailure();
+    final failingTests =
+        failedTestErrorMessages.values.expand((e) => e).length.formatFailure();
     final skippedTests = skipCount.formatSkipped();
     final result = [passingTests, failingTests, skippedTests]
       ..removeWhere((element) => element.isEmpty);
@@ -373,16 +394,21 @@ Future<int> _flutterTest({
         if (event.stackTrace.trim().isNotEmpty) {
           stderr('$clearLine${event.stackTrace}');
         }
-
-        final traceLocation = _getTraceLocation(stackTrace: event.stackTrace);
-
-        // When failing to recover the location from the stack trace,
-        // save a short description of the error
-        final testErrorDescription = traceLocation ??
-            event.error.replaceAll('\n', ' ').truncated(_lineLength);
-
+        final test = tests[event.testID]!;
+        final suite = suites[test.suiteID]!;
         final prefix = event.isFailure ? '[FAILED]' : '[ERROR]';
-        failedTestErrorMessages[event.testID] = '$prefix $testErrorDescription';
+
+        final optimizationApplied = _isOptimizationApplied(suite);
+        final topGroupName = _topGroupName(test, groups);
+        final testPath =
+            _actualTestPath(optimizationApplied, suite.path!, topGroupName);
+        final testName =
+            _actualTestName(optimizationApplied, test.name, topGroupName);
+        final relativeTestPath = p.relative(testPath, from: cwd);
+        failedTestErrorMessages[relativeTestPath] = [
+          ...failedTestErrorMessages[relativeTestPath] ?? [],
+          '$prefix $testName'
+        ];
       }
 
       if (event is TestDoneEvent) {
@@ -390,30 +416,36 @@ Future<int> _flutterTest({
 
         final test = tests[event.testID]!;
         final suite = suites[test.suiteID]!;
+        final optimizationApplied = _isOptimizationApplied(suite);
+        final firstGroupName = _topGroupName(test, groups);
+        final testPath =
+            _actualTestPath(optimizationApplied, suite.path!, firstGroupName);
+        final testName =
+            _actualTestName(optimizationApplied, test.name, firstGroupName);
 
         if (event.skipped) {
           stdout(
-            '''$clearLine${lightYellow.wrap('${test.name} ${suite.path} (SKIPPED)')}\n''',
+            '''$clearLine${lightYellow.wrap('$testName $testPath (SKIPPED)')}\n''',
           );
           skipCount++;
         } else if (event.result == TestResult.success) {
           successCount++;
         } else {
-          stderr('$clearLine${test.name} ${suite.path} (FAILED)');
+          stderr('$clearLine$testName $testPath (FAILED)');
         }
 
         final timeElapsed = Duration(milliseconds: event.time).formatted();
         final stats = computeStats();
-        final testName = test.name.truncated(
-          _lineLength - (timeElapsed.length + stats.length + 2),
-        );
-        stdout('''$clearLine$timeElapsed $stats: $testName''');
+        final truncatedTestName = testName.toSingleLine().truncated(
+              _lineLength - (timeElapsed.length + stats.length + 2),
+            );
+        stdout('''$clearLine$timeElapsed $stats: $truncatedTestName''');
       }
 
       if (event is DoneTestEvent) {
         final timeElapsed = Duration(milliseconds: event.time).formatted();
         final stats = computeStats();
-        final summary = event.success == true
+        final summary = event.success ?? false
             ? lightGreen.wrap('All tests passed!')!
             : lightRed.wrap('Some tests failed.')!;
 
@@ -428,9 +460,15 @@ Future<int> _flutterTest({
           final title = styleBold.wrap('Failing Tests:');
 
           final lines = StringBuffer('$clearLine$title\n');
-          for (final errorMessage in failedTestErrorMessages.values) {
-            lines.writeln('$clearLine - $errorMessage');
+          for (final testSuiteErrorMessages
+              in failedTestErrorMessages.entries) {
+            lines.writeln('$clearLine - ${testSuiteErrorMessages.key} ');
+
+            for (final errorMessage in testSuiteErrorMessages.value) {
+              lines.writeln('$clearLine \t- $errorMessage');
+            }
           }
+
           stderr(lines.toString());
         }
       }
@@ -454,6 +492,29 @@ Future<int> _flutterTest({
   return completer.future;
 }
 
+bool _isOptimizationApplied(TestSuite suite) =>
+    suite.path?.contains(_testOptimizerFileName) ?? false;
+
+String? _topGroupName(Test test, Map<int, TestGroup> groups) => test.groupIDs
+    .map((groupID) => groups[groupID]?.name)
+    .firstWhereOrNull((groupName) => groupName?.isNotEmpty ?? false);
+
+String _actualTestPath(
+  bool optimizationApplied,
+  String path,
+  String? groupName,
+) =>
+    optimizationApplied
+        ? path.replaceFirst(_testOptimizerFileName, groupName!)
+        : path;
+
+String _actualTestName(
+  bool optimizationApplied,
+  String name,
+  String? topGroupName,
+) =>
+    optimizationApplied ? name.replaceFirst(topGroupName!, '').trim() : name;
+
 final int _lineLength = () {
   try {
     return stdout.terminalColumns;
@@ -462,7 +523,11 @@ final int _lineLength = () {
   }
 }();
 
-extension on TestEvent {
+// The extension is intended to be unnamed, but it's not possible due to
+// an issue with Dart SDK 2.18.0.
+//
+// Once the min Dart SDK is bumped, this extension can be unnamed again.
+extension _TestEvent on TestEvent {
   bool shouldCancelTimer() {
     final event = this;
     if (event is MessageTestEvent) return true;
@@ -502,23 +567,7 @@ extension on String {
     final truncated = substring(length - maxLength, length).trim();
     return '...$truncated';
   }
-}
 
-String? _getTraceLocation({
-  required String stackTrace,
-}) {
-  final trace = Trace.parse(stackTrace);
-  if (trace.frames.isEmpty) {
-    return null;
-  }
-
-  final lastFrame = trace.frames.last;
-
-  final library = lastFrame.library;
-  final line = lastFrame.line;
-  final column = lastFrame.column;
-
-  if (line == null) return library;
-  if (column == null) return '$library:$line';
-  return '$library:$line:$column';
+  String toSingleLine() =>
+      replaceAll('\n', '').replaceAll(RegExp(r'\s\s+'), ' ');
 }
