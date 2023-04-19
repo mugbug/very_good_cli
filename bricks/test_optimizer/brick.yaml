@@ -11,3 +11,13 @@ vars:
     default: "."
     description: The path to the package root.
     prompt: Please enter the path to the package root.
+  tags:
+    type: string
+    description: Select only test files associated with the specified tags.
+    default: 
+    prompt: Please enter the tags to be used to select associated test files.
+  exclude-tags:
+    type: string
+    description: "Select only test files not-associated with the specified tags."
+    default: 
+    prompt: Please enter the tags to be used to exlclude associated test files.

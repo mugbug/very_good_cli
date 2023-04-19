@@ -1,6 +1,8 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // Consider adding this file to your .gitignore.
-
+{{#isUsingTags}}@Tags([
+{{#tags}}'{{.}}',{{/tags}}
+]){{/isUsingTags}}
 {{#isFlutter}}import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
